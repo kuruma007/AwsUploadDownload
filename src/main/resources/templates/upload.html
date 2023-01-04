@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>All files</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=10"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/
+	4.1.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/
+		jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/
+		umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/
+		bootstrap.min.js"></script>
+</head>
+<style>
+    table {
+    counter-reset: tableCount;
+}
+.counterCell:before {
+    content: counter(tableCount);
+    counter-increment: tableCount;
+}
+</style>
+<body onload="viewList()">
+<div class="container h-100">
+    <div class="row h-100 justify-content-center align-items-center">
+        <div class="col-md-7 table-responsive">
+            <br/>
+            <br/>
+            <div class="container">
+                <h2>Upload Files</h2>
+                <br/>
+                <table class="table">
+                    <tr>
+                        <form action="/uploadFile" method="POST" enctype="multipart/form-data">
+                            <label for="uploadedFile">Select a file:</label>&nbsp;
+                            <input type="file" id="uploadedFile" name="file">&nbsp;
+                            <input type="submit">
+                        </form> &emsp;
+                        <form th:action="@{/logout}" method="post">
+                            <input type="submit" value="Sign Out"/>
+                        </form>
+                    </tr>
+                    <br/>
+                    <br/>
+                    <thead>
+                    <tr>
+                        <th scope="col">S.No</th>
+                        <th scope="col">Files</th>
+                    </tr>
+                    </thead>
+                    <tbody id="table_body">
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    function viewList(){
+        fetch("http://localhost:8080/list").then(response => response.json())
+    .then(json => {
+        console.log(json[0]);
+        let tableData = "";
+        json.map((values) => {
+            tableData +=`<tr>
+              <th class= "counterCell"></th>
+                <td><a href=http://localhost:8080/download/${values}>${values}</a></td>
+           </tr>`;
+        });
+        document.getElementById("table_body").
+            innerHTML=tableData;
+    }).catch((error) => {
+       console.log(error)
+    });
+    }
+
+    function preventBack(){window.history.forward();}
+    setTimeout("preventBack()", 0);
+    window.onunload=function(){null};
+</script>
+</body>
+</html>
