@@ -21,6 +21,7 @@
     content: counter(tableCount);
     counter-increment: tableCount;
 }
+
 </style>
 <body onload="viewList()">
 <div class="container h-100">
@@ -64,12 +65,23 @@
     .then(json => {
         console.log(json[0]);
         let tableData = "";
-        json.map((values) => {
+        json.map((fileName) => {
+            let result = '';
+            const {length} = fileName;
+            for(let i = 0; i < length; i++){
+                const character = fileName[i];
+                if(!(character === ' ')){
+                    result += character
+                }else{
+                    result += '%20';
+                };
+            };
             tableData +=`<tr>
-              <th class= "counterCell"></th>
-                <td><a href=http://localhost:8080/download/${values}>${values}</a></td>
-           </tr>`;
+                <th class= "counterCell"></th>
+                    <td> <a href= http://localhost:8080/download/${result} > ${fileName} </a> </td>
+              </tr>`;
         });
+
         document.getElementById("table_body").
             innerHTML=tableData;
     }).catch((error) => {
@@ -80,6 +92,7 @@
     function preventBack(){window.history.forward();}
     setTimeout("preventBack()", 0);
     window.onunload=function(){null};
+
 </script>
 </body>
 </html>
