@@ -1,7 +1,10 @@
 package com.example.demo.service;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,15 +34,27 @@ public class FileServiceImpl implements FileService{
         String fileName = multipartFile.getOriginalFilename();
         try{
             File file = convertMultiPart(multipartFile);
-            PutObjectResult putObjectResult = amazonS3.putObject(bucketName,fileName, file);
-            putObjectResult.getContentMd5();
+            String name = amazonS3.getObject(bucketName,fileName).getKey();
+            if(!Objects.equals(name, "")){
+                Date date = new Date();
+                String newFileName = fileName +" " + date;
+                PutObjectResult putObjectResult = amazonS3.putObject(bucketName,newFileName, file);
+                putObjectResult.getContentMd5();
+            }
+            else{
+                PutObjectResult putObjectResult = amazonS3.putObject(bucketName,fileName, file);
+                putObjectResult.getContentMd5();
+            }
+
         }catch(IOException exception){
             throw new RuntimeException(exception);
-        }
-        catch (AmazonServiceException amazonServiceException){
+        } catch (AmazonServiceException amazonServiceException){
             System.out.println(amazonServiceException.getErrorMessage());
             throw new AmazonServiceException(amazonServiceException.getErrorCode());
+        }catch (AmazonClientException amazonClientException){
+            throw new AmazonClientException(amazonClientException.getMessage());
         }
+
     }
 
     @Override
