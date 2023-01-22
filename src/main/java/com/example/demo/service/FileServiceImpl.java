@@ -37,7 +37,7 @@ public class FileServiceImpl implements FileService{
             String name = amazonS3.getObject(bucketName,fileName).getKey();
             if(!Objects.equals(name, "")){
                 Date date = new Date();
-                String newFileName = fileName +" " + date;
+                String newFileName = fileName + " " + date;
                 PutObjectResult putObjectResult = amazonS3.putObject(bucketName,newFileName, file);
                 putObjectResult.getContentMd5();
             }
