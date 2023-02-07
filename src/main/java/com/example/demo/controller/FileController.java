@@ -10,6 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Controller
@@ -28,7 +29,7 @@ public class FileController {
         return "upload";
     }
     @RequestMapping("/uploadFile")
-    public String uploadFileToS3(@RequestParam("file") MultipartFile multipartFile){
+    public String uploadFileToS3(@RequestParam("file") MultipartFile multipartFile) throws IOException {
         fileService.uploadFile(multipartFile);
         return "upload";
     }
