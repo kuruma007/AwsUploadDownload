@@ -5,6 +5,7 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.util.IOUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,9 +16,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Service
+@Slf4j
 public class FileServiceImpl implements FileService {
 
     @Value("${aws.bucket.bucketName}")
@@ -37,11 +40,13 @@ public class FileServiceImpl implements FileService {
             Path filePath = Path.of(file.getPath());
             Date date = new Date();
             String newFileName = fileName + "~" + date;
+
             PutObjectResult putObjectResult = amazonS3.putObject(bucketName, newFileName, file);
             putObjectResult.getContentMd5();
+
             Files.deleteIfExists(filePath);
         } catch (AmazonServiceException amazonServiceException) {
-            System.out.println(amazonServiceException.getErrorMessage());
+            log.info(amazonServiceException.getErrorMessage());
             throw new AmazonServiceException(amazonServiceException.getErrorCode());
         } catch (AmazonClientException amazonClientException) {
             throw new AmazonClientException(amazonClientException.getMessage());
@@ -50,9 +55,16 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public byte[] downloadFile(String fileName) {
-        S3Object s3Object = amazonS3.getObject(bucketName, fileName);
-        S3ObjectInputStream objectContent = s3Object.getObjectContent();
+        ObjectListing files = amazonS3.listObjects(bucketName);
+        List<S3ObjectSummary> uploadedFiles = files.getObjectSummaries();
+        List<String> filesInS3Bucket = uploadedFiles.stream()
+                .map(S3ObjectSummary::getKey)
+                .collect(Collectors.toList());
+        String fileToBeDownloaded = filesInS3Bucket.stream().filter(file -> file.contains(fileName)).findFirst().get();
         try {
+            S3Object s3Object = amazonS3.getObject(bucketName, fileToBeDownloaded);
+            S3ObjectInputStream objectContent = s3Object.getObjectContent();
+
             return IOUtils.toByteArray(objectContent);
         } catch (IOException exception) {
             throw new RuntimeException(exception);
@@ -81,6 +93,7 @@ public class FileServiceImpl implements FileService {
         FileOutputStream fileOutputStream = new FileOutputStream(convertFile);
         fileOutputStream.write(multipartFile.getBytes());
         fileOutputStream.close();
+
         return convertFile;
     }
 
